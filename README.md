@@ -63,4 +63,6 @@ The framework focuses on:
 
 ---
 
-
+## Running
+- **HTML Document** -  python -m http.server 5500
+- **main.py file** - unicorn main:app --reload
