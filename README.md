@@ -59,7 +59,8 @@ The framework focuses on:
 
 ## 👩‍💻 Contributors
 - **Janhavi Katakdhond** – Project Lead & Developer
-- 
+- **Mansi Mahabdi** - Developer
 
 ---
+
 
