@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwarVarta Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .chat-container {
+      width: 90%;
+      max-width: 800px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+    }
+    .header {
+      background: linear-gradient(90deg, #4f46e5, #3b82f6);
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    .header h2 {
+      margin: 5px 0;
+    }
+    .project-desc {
+      font-size: 14px;
+      margin-top: 5px;
+      color: #f1f5f9;
+    }
+    .chat-box {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #f9fafb;
+    }
+    .message {
+      margin: 10px 0;
+      padding: 10px 14px;
+      border-radius: 8px;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+    .user {
+      background: #3b82f6;
+      color: white;
+      margin-left: auto;
+      text-align: right;
+    }
+    .bot {
+      background: #e5e7eb;
+      color: #111827;
+      margin-right: auto;
+    }
+    .input-area {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      outline: none;
+    }
+    .input-area button {
+      background: #4f46e5;
+      color: white;
+      border: none;
+      margin-left: 10px;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .mode-select {
+      margin: 8px;
+      text-align: center;
+    }
+    .video-card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 8px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .video-card a {
+      text-decoration: none;
+      color: #2563eb;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="header">
+      <h2>SwarVarta Chatbot</h2>
+      <p class="project-desc">
+        An AI Framework for Real-Time Indian Language and Dialect Intelligence.
+        Ask me anything or request study videos!
+      </p>
+    </div>
+
+    <div class="mode-select">
+      <label><input type="radio" name="mode" value="chat" checked> Chat</label>
+      <label style="margin-left: 15px;">
+        <input type="radio" name="mode" value="video"> Study Videos
+      </label>
+    </div>
+
+    <div id="chat-box" class="chat-box"></div>
+
+    <div class="input-area">
+      <input id="user-input" type="text" placeholder="Type your message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:8000/predict";
+
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const chatBox = document.getElementById("chat-box");
+      const text = input.value.trim();
+      if (!text) return;
+
+      // Add user message
+      const userMessage = document.createElement("div");
+      userMessage.className = "message user";
+      userMessage.textContent = text;
+      chatBox.appendChild(userMessage);
+      input.value = "";
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Detect mode
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, mode })
+        });
+
+        const data = await res.json();
+
+        if (data.detail) {
+          throw new Error(data.detail);
+        }
+
+        // Add bot response
+        const botMessage = document.createElement("div");
+        botMessage.className = "message bot";
+        botMessage.textContent = data.response;
+        chatBox.appendChild(botMessage);
+
+        // If videos available, show them
+        if (data.videos) {
+          data.videos.forEach(video => {
+            const card = document.createElement("div");
+            card.className = "video-card";
+            card.innerHTML = `<a href="${video.url}" target="_blank">${video.title}</a>`;
+            chatBox.appendChild(card);
+          });
+        }
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (err) {
+        const errorMessage = document.createElement("div");
+        errorMessage.className = "message bot";
+        errorMessage.textContent = "⚠️ Error: " + err.message;
+        chatBox.appendChild(errorMessage);
+      }
+    }
+  </script>
+</body>
+</html>

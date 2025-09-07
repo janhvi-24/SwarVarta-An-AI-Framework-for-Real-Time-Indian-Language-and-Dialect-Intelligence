@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SwarVarta - AI Framework</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .chat-container {
+      width: 500px;
+      height: 600px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .header {
+      background: #4b6cb7;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .chat-box {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+    }
+    .message {
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .user-message {
+      background: #dcf8c6;
+      align-self: flex-end;
+    }
+    .bot-message {
+      background: #f1f0f0;
+      align-self: flex-start;
+    }
+    .input-box {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      margin-left: 5px;
+      padding: 10px 15px;
+      border: none;
+      background: #4b6cb7;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #3a5299;
+    }
+    .youtube-link {
+      display: block;
+      margin: 5px 0;
+      color: #1a73e8;
+      text-decoration: none;
+    }
+    .youtube-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="header">
+      SwarVarta - AI Framework for Real-Time Indian Language & Dialect Intelligence
+    </div>
+    <div class="chat-box" id="chat-box"></div>
+    <div class="input-box">
+      <input type="text" id="user-input" placeholder="Type or speak...">
+      <button onclick="sendMessage()">Send</button>
+      <button onclick="startVoice()">🎤</button>
+    </div>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value.trim();
+      if (!message) return;
+
+      appendMessage("user-message", message);
+      input.value = "";
+
+      const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: message }),
+      });
+
+      const data = await response.json();
+      if (data.youtube) {
+        appendMessage("bot-message", data.response);
+        data.youtube.forEach(video => {
+          appendLink("bot-message", video.title, video.url);
+        });
+      } else {
+        appendMessage("bot-message", data.response);
+      }
+    }
+
+    function appendMessage(className, text) {
+      const chatBox = document.getElementById("chat-box");
+      const msg = document.createElement("div");
+      msg.className = "message " + className;
+      msg.innerText = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function appendLink(className, title, url) {
+      const chatBox = document.getElementById("chat-box");
+      const link = document.createElement("a");
+      link.className = "youtube-link message " + className;
+      link.href = url;
+      link.target = "_blank";
+      link.innerText = title;
+      chatBox.appendChild(link);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function startVoice() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "en-IN";
+      recognition.start();
+      recognition.onresult = function(event) {
+        const speechText = event.results[0][0].transcript;
+        document.getElementById("user-input").value = speechText;
+        sendMessage();
+      };
+    }
+  </script>
+</body>
+</html>
